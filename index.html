@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmAI Dashboard | Your Smart Agriculture Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Gray-100 */
+        }
+        .main-content {
+            transition: margin-left 0.3s ease;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .nav-btn.active {
+            background-color: #dcfce7; /* Green-100 */
+            color: #166534; /* Green-800 */
+        }
+        .chat-bubble {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            position: relative;
+        }
+        .user-bubble {
+            background-color: #2563eb;
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+        }
+        .ai-bubble {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            padding-left: 55px; /* Space for avatar */
+        }
+        .ai-avatar {
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            object-fit: cover;
+        }
+        .speak-container {
+            position: absolute;
+            bottom: 8px;
+            right: 12px;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .ai-bubble:hover .speak-container {
+            opacity: 1;
+        }
+        .speak-text {
+            font-size: 0.75rem;
+            color: #4b5563; /* Gray-600 */
+            margin-right: 8px;
+            display: none; /* Hidden by default */
+        }
+        .ai-bubble:hover .speak-text {
+            display: inline; /* Show on hover */
+        }
+        .speak-btn {
+            cursor: pointer;
+            color: #4b5563; /* Gray-600 */
+            background-color: white;
+            border-radius: 50%;
+            width: 32px; /* Increased size */
+            height: 32px; /* Increased size */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        #chat-window::-webkit-scrollbar { width: 6px; }
+        #chat-window::-webkit-scrollbar-track { background: #f1f5f9; }
+        #chat-window::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        #chat-window::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        #voiceBtn.listening svg {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .gemini-feature-btn {
+            background-color: #ede9fe;
+            color: #5b21b6;
+            border: 1px solid #d8b4fe;
+        }
+        .gemini-feature-btn:hover {
+            background-color: #d8b4fe;
+        }
+        #online-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Header for Language Selection -->
+    <header class="bg-white shadow-sm sticky top-0 z-40 md:ml-64">
+        <div class="container mx-auto px-4 md:px-8 py-2 flex justify-end items-center space-x-4">
+             <div class="flex items-center space-x-2">
+                <div id="online-status"></div>
+                <span id="online-status-text" class="text-sm text-gray-600"></span>
+            </div>
+            <div class="relative">
+                <select id="languageSelector" class="pl-4 pr-8 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <option value="en">English</option>
+                    <option value="hi">हिन्दी</option>
+                    <option value="pa">ਪੰਜਾਬੀ</option>
+                    <option value="ta">தமிழ்</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Navigation (Desktop) -->
+    <nav class="hidden md:flex flex-col w-64 h-screen bg-white shadow-md fixed top-0 left-0 p-4 z-50">
+        <div class="flex items-center space-x-2 mb-8">
+            <svg class="w-8 h-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.311a7.5 7.5 0 0 1-7.5 0c.413.613 1.048 1.125 1.787 1.487a7.5 7.5 0 0 1 4.026 0c.739-.362 1.374-.874 1.787-1.487Zm-1.5-9.75h.008v.008h-.008v-.008Zm-3.75 0h.008v.008h-.008v-.008Zm-3.75 0h.008v.008h-.008v-.008Z" /></svg>
+            <span class="text-2xl font-bold">FarmAI <span class="text-green-600">Dashboard</span></span>
+        </div>
+        <div class="flex flex-col space-y-2">
+            <button class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-left text-gray-600 hover:bg-gray-100 transition active" data-section="dashboard">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span data-lang-key="nav_dashboard">Dashboard</span>
+            </button>
+            <button class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-left text-gray-600 hover:bg-gray-100 transition" data-section="crop-health">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 15.75l-2.489-2.489m0 0a3.375 3.375 0 10-4.773-4.773 3.375 3.375 0 004.774 4.774zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span data-lang-key="nav_crop_health">Crop Health</span>
+            </button>
+            <button class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-left text-gray-600 hover:bg-gray-100 transition" data-section="market">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
+                <span data-lang-key="nav_market_prices">Market Prices</span>
+            </button>
+            <button class="nav-btn flex items-center space-x-3 p-3 rounded-lg text-left text-gray-600 hover:bg-gray-100 transition" data-section="finance">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.75A.75.75 0 013 4.5h.75m0 0h.75A.75.75 0 015.25 6v.75m0 0v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75V7.5m0 0h.75A.75.75 0 005.25 6h-.75m0 0V5.25m0 0A.75.75 0 013.75 4.5h.75M8.25 8.25V6a2.25 2.25 0 012.25-2.25h3a2.25 2.25 0 012.25 2.25v2.25m0 0V8.25m0 0l-3 3m-3-3l3 3m-3-3v.75A2.25 2.25 0 016.75 12h.75m-1.5-1.5l3 3m-3-3l3 3m0 0l3-3m-3 3v.75a2.25 2.25 0 002.25 2.25h3.75a2.25 2.25 0 002.25-2.25V9.75m0 0l3 3m-3-3l-3 3m0 0l-3-3m3 3v.75a2.25 2.25 0 01-2.25 2.25h-1.5a2.25 2.25 0 01-2.25-2.25V9.75m0 0l-3 3m3-3l-3 3" /></svg>
+                <span data-lang-key="nav_financial_services">Financial Services</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content md:ml-64 pb-24 md:pb-4 p-4 md:p-8">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <h1 class="text-3xl font-bold mb-6" data-lang-key="title_dashboard">Farm Dashboard</h1>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Chatbot Column -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-2xl shadow-xl flex flex-col h-full" style="min-height: 75vh;">
+                        <div class="p-4 border-b">
+                            <h2 class="text-xl font-semibold" data-lang-key="title_ask_ai">Ask AI Farmer Buddy</h2>
+                        </div>
+                        <div id="chat-window" class="flex-1 p-6 overflow-y-auto flex flex-col space-y-4">
+                            <div class="chat-bubble ai-bubble">
+                                <img src="https://i.pinimg.com/736x/8e/15/8d/8e158d9a997a3ab9781f271317725969.jpg" 
+                                     onerror="this.onerror=null;this.src='https://placehold.co/100x100/A7D3A9/4F46E5?text=🧑‍🌾';"
+                                     alt="Farmer Avatar" class="ai-avatar">
+                                <span data-lang-key="ai_greeting">Namaste! I am AI Farmer Buddy. Ask me anything about crop choices, government schemes, or market prices.</span>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-gray-200">
+                            <div id="example-prompts-container" class="flex flex-wrap justify-center gap-2">
+                                <!-- Example prompts will be rendered here by JS -->
+                            </div>
+                        </div>
+                        <div class="p-4 bg-white border-t border-gray-200 rounded-b-2xl">
+                            <form id="chat-form" class="flex items-center space-x-2">
+                                <input type="text" id="chat-input" data-lang-key-placeholder="placeholder_ask_question" placeholder="Type your question..." class="flex-1 w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <button type="button" id="voiceBtn" class="text-gray-500 rounded-full p-3 hover:bg-gray-200 transition">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zM17.3 11c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"></path></svg>
+                                </button>
+                                <button type="submit" class="bg-green-600 text-white rounded-full p-3 hover:bg-green-700 transition shadow">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- Weather Widget -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h2 class="text-xl font-semibold mb-4" data-lang-key="title_weather">Weather Forecast</h2>
+                        <div class="text-center mb-4">
+                            <p class="text-5xl font-bold">28°C</p>
+                            <p class="text-gray-500" data-lang-key="weather_location">Partly Cloudy in Kharagpur, WB</p>
+                        </div>
+                        <div id="weatherForecast" class="flex justify-between text-center text-sm"></div>
+                    </div>
+                    <!-- Alerts -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h2 class="text-xl font-semibold mb-4" data-lang-key="title_alerts">Alerts <span class="text-sm bg-red-100 text-red-700 font-bold px-2 py-1 rounded-full">2</span></h2>
+                        <div class="space-y-3">
+                            <div class="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg">
+                                <span class="text-xl">🌧️</span>
+                                <div>
+                                    <p class="font-semibold" data-lang-key="alert1_title">Heavy Rain Expected</p>
+                                    <p class="text-sm text-gray-600" data-lang-key="alert1_desc">Thunderstorms forecasted for Day 3. Consider adjusting irrigation schedules.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3 p-3 bg-red-50 rounded-lg">
+                                <span class="text-xl">🐛</span>
+                                <div>
+                                    <p class="font-semibold" data-lang-key="alert2_title">Pest Risk: Aphids</p>
+                                    <p class="text-sm text-gray-600" data-lang-key="alert2_desc">High risk of aphid infestation in mustard fields. Monitor crops closely.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Crop Health Section -->
+        <section id="crop-health" class="content-section">
+            <h1 class="text-3xl font-bold mb-6" data-lang-key="title_crop_health">Crop Health Monitor</h1>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h2 class="text-xl font-semibold mb-4" data-lang-key="title_crop_scanner">AI Crop Scanner</h2>
+                    <div id="uploadArea" class="text-center border-2 border-dashed border-gray-300 rounded-lg p-8 cursor-pointer hover:border-green-500 hover:bg-green-50 transition">
+                        <img id="uploadedImagePreview" class="hidden mx-auto h-32 mb-4 rounded-md">
+                        <svg id="uploadIcon" class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <p class="mt-2 font-semibold" data-lang-key="scanner_prompt">Click to upload or scan crop image</p>
+                        <p class="text-sm text-gray-500" data-lang-key="scanner_desc">AI will analyze for diseases and deficiencies.</p>
+                        <input type="file" id="cropImageInput" accept="image/*" class="hidden">
+                    </div>
+                    <button id="diagnoseBtn" class="w-full mt-4 py-2 px-4 rounded-md gemini-feature-btn font-semibold hidden">✨ Get AI Pest Diagnosis</button>
+                    <div id="analysisResults" class="hidden mt-4">
+                        <h3 class="font-semibold text-lg" data-lang-key="analysis_title">AI Diagnosis Results</h3>
+                        <div id="diagnosisContent" class="mt-2 p-4 bg-green-50 border border-green-200 rounded-lg"></div>
+                    </div>
+                </div>
+                <div id="diseaseCards" class="space-y-4">
+                    <h2 class="text-xl font-semibold" data-lang-key="title_disease_db">Common Disease Database</h2>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Market Section -->
+        <section id="market" class="content-section">
+            <h1 class="text-3xl font-bold mb-6" data-lang-key="title_market">Market Intelligence</h1>
+             <div class="mb-4">
+                <input type="text" id="cropSearchInput" data-lang-key-placeholder="placeholder_search_crop" placeholder="Search for a crop..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                     <h2 class="text-xl font-semibold" data-lang-key="title_current_prices">Current Prices - Kharagpur Mandi</h2>
+                     <div id="priceCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                     <button id="marketAnalysisBtn" class="w-full mt-4 py-2 px-4 rounded-md gemini-feature-btn font-semibold">✨ Get Market Analysis</button>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h2 class="text-xl font-semibold mb-4" data-lang-key="title_price_trends">30-Day Price Trends</h2>
+                    <div class="h-80"><canvas id="priceChart"></canvas></div>
+                    <div id="marketAnalysisResult" class="hidden mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Finance Section -->
+        <section id="finance" class="content-section">
+            <h1 class="text-3xl font-bold mb-6" data-lang-key="title_finance">Financial Services</h1>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h2 class="text-xl font-semibold mb-4" data-lang-key="title_loan_calculator">Loan Eligibility Calculator</h2>
+                    <form id="loanForm" class="space-y-4">
+                        <div>
+                            <label for="farmArea" class="block text-sm font-medium text-gray-700" data-lang-key="label_farm_area">Farm Area (in acres)</label>
+                            <input type="number" id="farmArea" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" placeholder="e.g., 5">
+                        </div>
+                        <div>
+                            <label for="annualIncome" class="block text-sm font-medium text-gray-700" data-lang-key="label_annual_income">Annual Income (₹)</label>
+                            <input type="number" id="annualIncome" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" placeholder="e.g., 200000">
+                        </div>
+                        <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition" data-lang-key="btn_calculate">Calculate Eligibility</button>
+                    </form>
+                    <div id="loanResults" class="hidden mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h3 class="font-bold text-blue-800" data-lang-key="title_eligibility_results">Eligibility Results</h3>
+                        <p class="mt-2 text-sm text-blue-700"><span data-lang-key="label_loan_amount">Eligible Loan Amount:</span> <span class="font-bold text-lg" id="eligibleAmount"></span></p>
+                        <button id="schemeAdvisorBtn" class="w-full mt-4 py-2 px-4 rounded-md gemini-feature-btn font-semibold">✨ Get Personalized Scheme Advice</button>
+                        <div id="schemeAdvisorResult" class="hidden mt-4 text-sm"></div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <!-- NEW Interest Calculator -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h2 class="text-xl font-semibold mb-4" data-lang-key="title_interest_calculator">Loan & Interest Calculator</h2>
+                        <form id="interestForm" class="space-y-4">
+                            <div>
+                                <label for="loanAmount" class="block text-sm font-medium text-gray-700" data-lang-key="label_loan_principal">Loan/Principal Amount (₹)</label>
+                                <input type="number" id="loanAmount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" placeholder="e.g., 100000">
+                            </div>
+                            <div>
+                                <label for="interestRate" class="block text-sm font-medium text-gray-700" data-lang-key="label_interest_rate">Annual Interest Rate (%)</label>
+                                <input type="number" id="interestRate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" placeholder="e.g., 8.5">
+                            </div>
+                            <div>
+                                <label for="loanTime" class="block text-sm font-medium text-gray-700" data-lang-key="label_loan_time">Time (in years)</label>
+                                <input type="number" id="loanTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" placeholder="e.g., 5">
+                            </div>
+                             <div>
+                                <label for="loanEmi" class="block text-sm font-medium text-gray-700" data-lang-key="label_loan_emi">Fixed EMI (₹ per month)</label>
+                                <input type="number" id="loanEmi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" placeholder="e.g., 2500">
+                            </div>
+                            <div class="flex space-x-2">
+                                <button type="button" id="calculateTotalBtn" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition" data-lang-key="btn_calculate_total">Calculate Total</button>
+                                <button type="button" id="calculateTenureBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition" data-lang-key="btn_calculate_tenure">Calculate Time</button>
+                            </div>
+                        </form>
+                        <div id="interestCalcResults" class="hidden mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"></div>
+                    </div>
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-semibold" data-lang-key="title_gov_schemes">Available Government Schemes</h2>
+                        <div id="schemeCards" class="space-y-4"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-t-md flex justify-around p-2 border-t z-50">
+        <button class="nav-btn flex flex-col items-center text-gray-600 p-2 rounded-lg w-16 active" data-section="dashboard">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+            <span class="text-xs" data-lang-key="nav_dashboard_mobile">Dashboard</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center text-gray-600 p-2 rounded-lg w-16" data-section="crop-health">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 15.75l-2.489-2.489m0 0a3.375 3.375 0 10-4.773-4.773 3.375 3.375 0 004.774 4.774zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span class="text-xs" data-lang-key="nav_crop_health_mobile">Crop</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center text-gray-600 p-2 rounded-lg w-16" data-section="market">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
+            <span class="text-xs" data-lang-key="nav_market_prices_mobile">Market</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center text-gray-600 p-2 rounded-lg w-16" data-section="finance">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.75A.75.75 0 013 4.5h.75m0 0h.75A.75.75 0 015.25 6v.75m0 0v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75V7.5m0 0h.75A.75.75 0 005.25 6h-.75m0 0V5.25m0 0A.75.75 0 013.75 4.5h.75M8.25 8.25V6a2.25 2.25 0 012.25-2.25h3a2.25 2.25 0 012.25 2.25v2.25m0 0V8.25m0 0l-3 3m-3-3l3 3m-3-3v.75A2.25 2.25 0 016.75 12h.75m-1.5-1.5l3 3m-3-3l3 3m0 0l3-3m-3 3v.75a2.25 2.25 0 002.25 2.25h3.75a2.25 2.25 0 002.25-2.25V9.75m0 0l3 3m-3-3l-3 3m0 0l-3-3m3 3v.75a2.25 2.25 0 01-2.25 2.25h-1.5a2.25 2.25 0 01-2.25-2.25V9.75m0 0l-3 3m3-3l-3 3" /></svg>
+            <span class="text-xs" data-lang-key="nav_financial_services_mobile">Finance</span>
+        </button>
+    </nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- Global variable for voices ---
+    let availableVoices = [];
+
+    // --- TRANSLATION DATA ---
+    const translations = {
+        en: {
+            nav_dashboard: "Dashboard", nav_crop_health: "Crop Health", nav_market_prices: "Market Prices", nav_financial_services: "Financial Services",
+            nav_dashboard_mobile: "Dashboard", nav_crop_health_mobile: "Crop", nav_market_prices_mobile: "Market", nav_financial_services_mobile: "Finance",
+            title_dashboard: "Farm Dashboard", title_ask_ai: "Ask AI Farmer Buddy", ai_greeting: "Namaste! I am AI Farmer Buddy. Ask me anything about crop choices, government schemes, or market prices.",
+            placeholder_ask_question: "Type your question or use the mic...",
+            title_weather: "Weather Forecast", weather_location: "Partly Cloudy in Kharagpur, WB",
+            title_alerts: "Alerts", alert1_title: "Heavy Rain Expected", alert1_desc: "Thunderstorms forecasted for Day 3. Consider adjusting irrigation schedules.",
+            alert2_title: "Pest Risk: Aphids", alert2_desc: "High risk of aphid infestation in mustard fields. Monitor crops closely.",
+            title_crop_health: "Crop Health Monitor", title_crop_scanner: "AI Crop Scanner", scanner_prompt: "Click to upload or scan crop image",
+            scanner_desc: "AI will analyze for diseases and deficiencies.", analysis_title: "AI Diagnosis Results",
+            issue_title: "Detected Issue: Leaf Blight", issue_desc: "Brown spots and yellowing detected. High severity.",
+            reco_title: "Recommendations", reco_list: `<li>Apply copper-based fungicide (Bordeaux mixture).</li><li>Improve field drainage immediately.</li><li>Remove and burn affected leaves.</li>`,
+            title_disease_db: "Common Disease Database", title_market: "Market Intelligence", title_current_prices: "Current Prices - Kharagpur Mandi",
+            title_price_trends: "30-Day Price Trends", title_finance: "Financial Services", title_loan_calculator: "Loan Eligibility Calculator",
+            label_farm_area: "Farm Area (in acres)", label_annual_income: "Annual Income (₹)", btn_calculate: "Calculate Eligibility",
+            title_eligibility_results: "Eligibility Results", label_loan_amount: "Eligible Loan Amount:", title_gov_schemes: "Available Government Schemes",
+            example_prompt1: "Explain PM Fasal Bima Yojana", example_prompt2: "Best rice variety for Kharagpur?", example_prompt3: "How to get a Kisan Credit Card?",
+            speak_text_label: "Click for voiceover",
+            title_interest_calculator: "Loan & Interest Calculator", label_loan_principal: "Loan/Principal Amount (₹)", label_interest_rate: "Annual Interest Rate (%)",
+            label_loan_time: "Time (in years)", label_loan_emi: "Fixed EMI (₹ per month)", btn_calculate_total: "Calculate Total", btn_calculate_tenure: "Calculate Time",
+            placeholder_search_crop: "Search for a crop...",
+            online_status_text: "Online", offline_status_text: "Offline",
+            offline_response_default: "You appear to be offline. I can only answer basic questions about government schemes (PM-KISAN, PMFBY, KCC) or direct you to features in the app. Please check your connection for full AI support.",
+            offline_response_pmkisan: "PM-KISAN provides income support of ₹6000/year for small and marginal farmers.",
+            offline_response_pmfby: "PM Fasal Bima Yojana (PMFBY) offers insurance against crop loss with low premiums for farmers.",
+            offline_response_kcc: "Kisan Credit Card (KCC) provides agricultural credit at subsidized interest rates.",
+            offline_response_loan: "You can use the Loan & Interest Calculator in the Financial Services section for calculations.",
+            offline_response_weather: "The weather forecast is available on the main dashboard.",
+            offline_response_market: "You can check and search for crop prices in the Market Prices section."
+        },
+        hi: {
+            nav_dashboard: "डैशबोर्ड", nav_crop_health: "फसल स्वास्थ्य", nav_market_prices: "बाजार मूल्य", nav_financial_services: "वित्तीय सेवाएं",
+            nav_dashboard_mobile: "डैशबोर्ड", nav_crop_health_mobile: "फसल", nav_market_prices_mobile: "बाजार", nav_financial_services_mobile: "वित्त",
+            title_dashboard: "फार्म डैशबोर्ड", title_ask_ai: "एआई फार्मर बडी से पूछें", ai_greeting: "नमस्ते! मैं एआई फार्मर बडी हूँ। मुझसे फसल विकल्प, सरकारी योजनाओं, या बाजार कीमतों के बारे में कुछ भी पूछें।",
+            placeholder_ask_question: "अपना प्रश्न टाइप करें या माइक का उपयोग करें...",
+            title_weather: "मौसम पूर्वानुमान", weather_location: "खड़गपुर, पश्चिम बंगाल में आंशिक रूप से बादल छाए हुए हैं",
+            title_alerts: "अलर्ट", alert1_title: "भारी बारिश की उम्मीद", alert1_desc: "तीसरे दिन आंधी-तूफान का पूर्वानुमान है। सिंचाई कार्यक्रम समायोजित करने पर विचार करें।",
+            alert2_title: "कीट का खतरा: एफिड्स", alert2_desc: "सरसों के खेतों में एफिड्स के संक्रमण का उच्च जोखिम। फसलों की बारीकी से निगरानी करें।",
+            title_crop_health: "फसल स्वास्थ्य मॉनिटर", title_crop_scanner: "एआई फसल स्कैनर", scanner_prompt: "फसल की तस्वीर अपलोड या स्कैन करने के लिए क्लिक करें",
+            scanner_desc: "एआई बीमारियों और कमियों का विश्लेषण करेगा।", analysis_title: "एआई निदान परिणाम",
+            issue_title: "पहचानी गई समस्या: पत्ती झुलसा", issue_desc: "भूरे धब्बे और पीलापन पाया गया। उच्च गंभीरता।",
+            reco_title: "सिफारिशें", reco_list: `<li>कॉपर आधारित कवकनाशी (बोर्डो मिश्रण) लगाएं।</li><li>खेत की जल निकासी में तुरंत सुधार करें।</li><li>प्रभावित पत्तियों को हटाकर जला दें।</li>`,
+            title_disease_db: "सामान्य रोग डेटाबेस", title_market: "बाजार इंटेलिजेंस", title_current_prices: "वर्तमान मूल्य - खड़गपुर मंडी",
+            title_price_trends: "30-दिन के मूल्य रुझान", title_finance: "वित्तीय सेवाएं", title_loan_calculator: "ऋण पात्रता कैलकुलेटर",
+            label_farm_area: "खेत का क्षेत्रफल (एकड़ में)", label_annual_income: "वार्षिक आय (₹)", btn_calculate: "पात्रता की गणना करें",
+            title_eligibility_results: "पात्रता परिणाम", label_loan_amount: "पात्र ऋण राशि:", title_gov_schemes: "उपलब्ध सरकारी योजनाएं",
+            example_prompt1: "पीएम फसल बीमा योजना समझाएं", example_prompt2: "खड़गपुर के लिए सबसे अच्छी चावल की किस्म?", example_prompt3: "किसान क्रेडिट कार्ड कैसे प्राप्त करें?",
+            speak_text_label: "वॉयसओवर के लिए क्लिक करें",
+            title_interest_calculator: "ऋण और ब्याज कैलकुलेटर", label_loan_principal: "ऋण/मूलधन राशि (₹)", label_interest_rate: "वार्षिक ब्याज दर (%)",
+            label_loan_time: "समय (वर्षों में)", label_loan_emi: "निश्चित ईएमआई (₹ प्रति माह)", btn_calculate_total: "कुल गणना करें", btn_calculate_tenure: "समय की गणना करें",
+            placeholder_search_crop: "फसल खोजें...",
+            online_status_text: "ऑनलाइन", offline_status_text: "ऑफलाइन",
+            offline_response_default: "आप ऑफ़लाइन दिखाई दे रहे हैं। मैं केवल सरकारी योजनाओं (पीएम-किसान, पीएमएफबीवाई, केसीसी) के बारे में बुनियादी सवालों का जवाब दे सकता हूं या आपको ऐप में सुविधाओं के लिए निर्देशित कर सकता हूं। पूर्ण एआई समर्थन के लिए कृपया अपना कनेक्शन जांचें।",
+            offline_response_pmkisan: "पीएम-किसान छोटे और सीमांत किसानों को ₹6000/वर्ष की आय सहायता प्रदान करता है।",
+            offline_response_pmfby: "पीएम फसल बीमा योजना (पीएमएफबीवाई) किसानों के लिए कम प्रीमियम पर फसल के नुकसान के खिलाफ बीमा प्रदान करती है।",
+            offline_response_kcc: "किसान क्रेडिट कार्ड (केसीसी) रियायती ब्याज दरों पर कृषि ऋण प्रदान करता है।",
+            offline_response_loan: "आप गणना के लिए वित्तीय सेवा अनुभाग में ऋण और ब्याज कैलकुलेटर का उपयोग कर सकते हैं।",
+            offline_response_weather: "मौसम का पूर्वानुमान मुख्य डैशबोर्ड पर उपलब्ध है।",
+            offline_response_market: "आप बाजार मूल्य अनुभाग में फसल की कीमतों की जांच और खोज कर सकते हैं।"
+        },
+        pa: {
+            nav_dashboard: "ਡੈਸ਼ਬੋਰਡ", nav_crop_health: "ਫਸਲ ਦੀ ਸਿਹਤ", nav_market_prices: "ਬਾਜ਼ਾਰ ਦੀਆਂ ਕੀਮਤਾਂ", nav_financial_services: "ਵਿੱਤੀ ਸੇਵਾਵਾਂ",
+            nav_dashboard_mobile: "ਡੈਸ਼ਬੋਰਡ", nav_crop_health_mobile: "ਫਸਲ", nav_market_prices_mobile: "ਬਾਜ਼ਾਰ", nav_financial_services_mobile: "ਵਿੱਤ",
+            title_dashboard: "ਫਾਰਮ ਡੈਸ਼ਬੋਰਡ", title_ask_ai: "ਏਆਈ ਫਾਰਮਰ ਬੱਡੀ ਨੂੰ ਪੁੱਛੋ", ai_greeting: "ਨਮਸਤੇ! ਮੈਂ ਏਆਈ ਫਾਰਮਰ ਬੱਡੀ ਹਾਂ। ਮੈਨੂੰ ਫਸਲਾਂ ਦੀ ਚੋਣ, ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ, ਜਾਂ ਬਾਜ਼ਾਰ ਦੀਆਂ ਕੀਮਤਾਂ ਬਾਰੇ ਕੁਝ ਵੀ ਪੁੱਛੋ।",
+            placeholder_ask_question: "ਆਪਣਾ ਸਵਾਲ ਟਾਈਪ ਕਰੋ ਜਾਂ ਮਾਈਕ ਦੀ ਵਰਤੋਂ ਕਰੋ...",
+            title_weather: "ਮੌਸਮ ਦੀ ਭਵਿੱਖਬਾਣੀ", weather_location: "ਖੜਗਪੁਰ, ਪੱਛਮੀ ਬੰਗਾਲ ਵਿੱਚ ਅੰਸ਼ਕ ਤੌਰ 'ਤੇ ਬੱਦਲਵਾਈ",
+            title_alerts: "ਚੇਤਾਵਨੀਆਂ", alert1_title: "ਭਾਰੀ ਮੀਂਹ ਦੀ ਉਮੀਦ", alert1_desc: "ਤੀਜੇ ਦਿਨ ਤੂਫਾਨ ਦੀ ਭਵਿੱਖਬਾਣੀ ਹੈ। ਸਿੰਚਾਈ ਦੇ ਕਾਰਜਕ੍ਰਮ ਨੂੰ ਅਨੁਕੂਲ ਕਰਨ 'ਤੇ ਵਿਚਾਰ ਕਰੋ।",
+            alert2_title: "ਕੀੜਿਆਂ ਦਾ ਖ਼ਤਰਾ: ਐਫੀਡਜ਼", alert2_desc: "ਸਰ੍ਹੋਂ ਦੇ ਖੇਤਾਂ ਵਿੱਚ ਐਫੀਡਜ਼ ਦੇ ਹਮਲੇ ਦਾ ਉੱਚ ਖਤਰਾ। ਫਸਲਾਂ ਦੀ ਨੇੜਿਓਂ ਨਿਗਰਾਨੀ ਕਰੋ।",
+            title_crop_health: "ਫਸਲ ਸਿਹਤ ਮਾਨੀਟਰ", title_crop_scanner: "ਏਆਈ ਫਸਲ ਸਕੈਨਰ", scanner_prompt: "ਫਸਲ ਦੀ ਤਸਵੀਰ ਅੱਪਲੋਡ ਜਾਂ ਸਕੈਨ ਕਰਨ ਲਈ ਕਲਿੱਕ ਕਰੋ",
+            scanner_desc: "ਏਆਈ ਬਿਮਾਰੀਆਂ ਅਤੇ ਕਮੀਆਂ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰੇਗਾ।", analysis_title: "ਏਆਈ ਨਿਦਾਨ ਨਤੀਜੇ",
+            issue_title: "ਪਛਾਣੀ ਗਈ ਸਮੱਸਿਆ: ਪੱਤਾ ਝੁਲਸ", issue_desc: "ਭੂਰੇ ਧੱਬੇ ਅਤੇ ਪੀਲਾਪਣ ਦੇਖਿਆ ਗਿਆ। ਉੱਚ ਗੰਭੀਰਤਾ।",
+            reco_title: "ਸਿਫਾਰਸ਼ਾਂ", reco_list: `<li>ਤਾਂਬੇ-ਅਧਾਰਤ ਉੱਲੀਨਾਸ਼ਕ (ਬੋਰਡੋ ਮਿਸ਼ਰਣ) ਦੀ ਵਰਤੋਂ ਕਰੋ।</li><li>ਖੇਤ ਦੇ ਨਿਕਾਸ ਵਿੱਚ ਤੁਰੰਤ ਸੁਧਾਰ ਕਰੋ।</li><li>ਪ੍ਰਭਾਵਿਤ ਪੱਤਿਆਂ ਨੂੰ ਹਟਾ ਕੇ ਸਾੜ ਦਿਓ।</li>`,
+            title_disease_db: "ਆਮ ਬਿਮਾਰੀ ਡਾਟਾਬੇਸ", title_market: "ਮਾਰਕੀਟ ਇੰਟੈਲੀਜੈਂਸ", title_current_prices: "ਮੌਜੂਦਾ ਕੀਮਤਾਂ - ਖੜਗਪੁਰ ਮੰਡੀ",
+            title_price_trends: "30-ਦਿਨ ਦੀਆਂ ਕੀਮਤਾਂ ਦੇ ਰੁਝਾਨ", title_finance: "ਵਿੱਤੀ ਸੇਵਾਵਾਂ", title_loan_calculator: "ਲੋਨ ਯੋਗਤਾ ਕੈਲਕੁਲੇਟਰ",
+            label_farm_area: "ਖੇਤ ਦਾ ਖੇਤਰਫਲ (ਏਕੜ ਵਿੱਚ)", label_annual_income: "ਸਾਲਾਨਾ ਆਮਦਨ (₹)", btn_calculate: "ਯੋਗਤਾ ਦੀ ਗਣਨਾ ਕਰੋ",
+            title_eligibility_results: "ਯੋਗਤਾ ਦੇ ਨਤੀਜੇ", label_loan_amount: "ਯੋਗ ਲੋਨ ਦੀ ਰਕਮ:", title_gov_schemes: "ਉਪਲਬਧ ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ",
+            example_prompt1: "ਪੀਐਮ ਫਸਲ ਬੀਮਾ ਯੋਜਨਾ ਦੀ ਵਿਆਖਿਆ ਕਰੋ", example_prompt2: "ਖੜਗਪੁਰ ਲਈ ਸਭ ਤੋਂ ਵਧੀਆ ਚਾਵਲ ਦੀ ਕਿਸਮ?", example_prompt3: "ਕਿਸਾਨ ਕ੍ਰੈਡਿਟ ਕਾਰਡ ਕਿਵੇਂ ਪ੍ਰਾਪਤ ਕਰੀਏ?",
+            speak_text_label: "ਵੌਇਸਓਵਰ ਲਈ ਕਲਿੱਕ ਕਰੋ",
+            title_interest_calculator: "ਲੋਨ ਅਤੇ ਵਿਆਜ ਕੈਲਕੁਲੇਟਰ", label_loan_principal: "ਲੋਨ/ਮੁੱਖ ਰਕਮ (₹)", label_interest_rate: "ਸਾਲਾਨਾ ਵਿਆਜ ਦਰ (%)",
+            label_loan_time: "ਸਮਾਂ (ਸਾਲਾਂ ਵਿੱਚ)", label_loan_emi: "ਸਥਿਰ EMI (₹ ਪ੍ਰਤੀ ਮਹੀਨਾ)", btn_calculate_total: "ਕੁੱਲ ਗਣਨਾ ਕਰੋ", btn_calculate_tenure: "ਸਮੇਂ ਦੀ ਗਣਨਾ ਕਰੋ",
+            placeholder_search_crop: "ਫਸਲ ਦੀ ਖੋਜ ਕਰੋ...",
+            online_status_text: "ਔਨਲਾਈਨ", offline_status_text: "ਔਫਲਾਈਨ",
+            offline_response_default: "ਤੁਸੀਂ ਔਫਲਾਈਨ ਦਿਖਾਈ ਦੇ ਰਹੇ ਹੋ। ਮੈਂ ਸਿਰਫ਼ ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ (ਪੀਐਮ-ਕਿਸਾਨ, ਪੀਐਮਐਫਬੀਵਾਈ, ਕੇਸੀਸੀ) ਬਾਰੇ ਮੁੱਢਲੇ ਸਵਾਲਾਂ ਦੇ ਜਵਾਬ ਦੇ ਸਕਦਾ ਹਾਂ ਜਾਂ ਤੁਹਾਨੂੰ ਐਪ ਵਿੱਚ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਲਈ ਨਿਰਦੇਸ਼ਿਤ ਕਰ ਸਕਦਾ ਹਾਂ। ਪੂਰੇ ਏਆਈ ਸਮਰਥਨ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੇ ਕਨੈਕਸ਼ਨ ਦੀ ਜਾਂਚ ਕਰੋ।",
+            offline_response_pmkisan: "ਪੀਐਮ-ਕਿਸਾਨ ਛੋਟੇ ਅਤੇ ਸੀਮਾਂਤ ਕਿਸਾਨਾਂ ਨੂੰ ₹6000/ਸਾਲ ਦੀ ਆਮਦਨ ਸਹਾਇਤਾ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ।",
+            offline_response_pmfby: "ਪੀਐਮ ਫਸਲ ਬੀਮਾ ਯੋਜਨਾ (ਪੀਐਮਐਫਬੀਵਾਈ) ਕਿਸਾਨਾਂ ਲਈ ਘੱਟ ਪ੍ਰੀਮੀਅਮ 'ਤੇ ਫਸਲਾਂ ਦੇ ਨੁਕਸਾਨ ਦੇ ਵਿਰੁੱਧ ਬੀਮਾ ਪ੍ਰਦਾਨ ਕਰਦੀ ਹੈ।",
+            offline_response_kcc: "ਕਿਸਾਨ ਕ੍ਰੈਡਿਟ ਕਾਰਡ (ਕੇਸੀਸੀ) ਸਬਸਿਡੀ ਵਾਲੀਆਂ ਵਿਆਜ ਦਰਾਂ 'ਤੇ ਖੇਤੀਬਾੜੀ ਕਰਜ਼ਾ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ।",
+            offline_response_loan: "ਤੁਸੀਂ ਗਣਨਾ ਲਈ ਵਿੱਤੀ ਸੇਵਾਵਾਂ ਸੈਕਸ਼ਨ ਵਿੱਚ ਲੋਨ ਅਤੇ ਵਿਆਜ ਕੈਲਕੁਲੇਟਰ ਦੀ ਵਰਤੋਂ ਕਰ ਸਕਦੇ ਹੋ।",
+            offline_response_weather: "ਮੌਸਮ ਦੀ ਭਵਿੱਖਬਾਣੀ ਮੁੱਖ ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਉਪਲਬਧ ਹੈ।",
+            offline_response_market: "ਤੁਸੀਂ ਮਾਰਕੀਟ ਕੀਮਤਾਂ ਸੈਕਸ਼ਨ ਵਿੱਚ ਫਸਲਾਂ ਦੀਆਂ ਕੀਮਤਾਂ ਦੀ ਜਾਂਚ ਅਤੇ ਖੋਜ ਕਰ ਸਕਦੇ ਹੋ।"
+        },
+        ta: {
+            nav_dashboard: "డాష్బోర్డ్", nav_crop_health: "பயிர் ஆரோக்கியம்", nav_market_prices: "சந்தை விலைகள்", nav_financial_services: "நிதி சேவைகள்",
+            nav_dashboard_mobile: "డాష్బోర్డ్", nav_crop_health_mobile: "பயிர்", nav_market_prices_mobile: "சந்தை", nav_financial_services_mobile: "நிதி",
+            title_dashboard: "பண்ணை டாஷ்போர்டு", title_ask_ai: "AI ஃபார்மர் படியிடம் கேளுங்கள்", ai_greeting: "நமஸ்தே! நான் AI ஃபார்மர் படி. பயிர் தேர்வுகள், அரசாங்க திட்டங்கள், அல்லது சந்தை விலைகள் பற்றி என்னிடம் எதுவும் கேளுங்கள்.",
+            placeholder_ask_question: "உங்கள் கேள்வியை தட்டச்சு செய்யவும் அல்லது மைக்கைப் பயன்படுத்தவும்...",
+            title_weather: "வானிலை முன்னறிவிப்பு", weather_location: "கரக்பூர், மேற்கு வங்காளத்தில் பகுதி மேகமூட்டம்",
+            title_alerts: "எச்சரிக்கைகள்", alert1_title: "கனமழை எதிர்பார்க்கப்படுகிறது", alert1_desc: "நாள் 3 அன்று இடியுடன் கூடிய மழை எதிர்பார்க்கப்படுகிறது. நீர்ப்பாசன அட்டவணையை சரிசெய்வதைக் கவனியுங்கள்.",
+            alert2_title: "பூச்சி ஆபத்து: அசுவினி", alert2_desc: "கடுகு வயல்களில் அசுவினி தாக்குதலின் அதிக ஆபத்து. பயிர்களை நெருக்கமாகக் கண்காணிக்கவும்.",
+            title_crop_health: "பயிர் சுகாதார கண்காணிப்பு", title_crop_scanner: "AI பயிர் ஸ்கேனர்", scanner_prompt: "பயிர் படத்தை பதிவேற்ற அல்லது ஸ்கேன் செய்ய கிளிக் செய்யவும்",
+            scanner_desc: "AI நோய்கள் மற்றும் குறைபாடுகளை பகுப்பாய்வு செய்யும்.", analysis_title: "AI கண்டறிதல் முடிவுகள்",
+            issue_title: "கண்டறியப்பட்ட சிக்கல்: இலை கருகல்", issue_desc: "பழுப்பு புள்ளிகள் மற்றும் மஞ்சள் நிறம் கண்டறியப்பட்டது. அதிக தீவிரம்.",
+            reco_title: "பரிந்துரைகள்", reco_list: `<li>தாமிரம் சார்ந்த பூஞ்சைக் கொல்லியை (போர்டோ கலவை) பயன்படுத்தவும்.</li><li>வயல் வடிகால் வசதியை உடனடியாக மேம்படுத்தவும்.</li><li>பாதிக்கப்பட்ட இலைகளை அகற்றி எரிக்கவும்.</li>`,
+            title_disease_db: "பொதுவான நோய் தரவுத்தளம்", title_market: "சந்தை நுண்ணறிவு", title_current_prices: "தற்போதைய விலைகள் - கரக்பூர் மண்டி",
+            title_price_trends: "30-நாள் விலை போக்குகள்", title_finance: "நிதி சேவைகள்", title_loan_calculator: "கடன் தகுதி கால்குலேटर",
+            label_farm_area: "பண்ணை பகுதி (ஏக்கரில்)", label_annual_income: "ஆண்டு வருமானம் (₹)", btn_calculate: "தகுதியைக் கணக்கிடுங்கள்",
+            title_eligibility_results: "தகுதி முடிவுகள்", label_loan_amount: "தகுதியான கடன் தொகை:", title_gov_schemes: "கிடைக்கும் அரசாங்க திட்டங்கள்",
+            example_prompt1: "PM ஃபசல் பீமா யோஜனாவை விளக்கவும்", example_prompt2: "கரக்பூருக்கு சிறந்த அரிசி வகை?", example_prompt3: "கிசான் கிரெடிட் கார்டு பெறுவது எப்படி?",
+            speak_text_label: "குரல்வழிக்கு கிளிக் செய்க",
+            title_interest_calculator: "கடன் மற்றும் வட்டி கால்குலேட்டர்", label_loan_principal: "கடன்/அசல் தொகை (₹)", label_interest_rate: "ஆண்டு வட்டி விகிதம் (%)",
+            label_loan_time: "நேரம் (ஆண்டுகளில்)", label_loan_emi: "நிலையான EMI (₹ प्रति माह)", btn_calculate_total: "மொத்தத்தைக் கணக்கிடுங்கள்", btn_calculate_tenure: "நேரத்தைக் கணக்கிடுங்கள்",
+            placeholder_search_crop: "பயிரைத் தேடுங்கள்...",
+            online_status_text: "ஆன்லைன்", offline_status_text: "ஆஃப்லைன்",
+            offline_response_default: "நீங்கள் ஆஃப்லைனில் இருப்பதாகத் தெரிகிறது. நான் அரசாங்கத் திட்டங்கள் (PM-KISAN, PMFBY, KCC) பற்றிய அடிப்படைக் கேள்விகளுக்கு மட்டுமே பதிலளிக்க முடியும் அல்லது பயன்பாட்டில் உள்ள அம்சங்களுக்கு உங்களை வழிநடத்த முடியும். முழு AI ஆதரவிற்கும் உங்கள் இணைப்பைச் சரிபார்க்கவும்.",
+            offline_response_pmkisan: "PM-KISAN சிறு மற்றும் குறு விவசாயிகளுக்கு ஆண்டுக்கு ₹6000 வருமான ஆதரவை வழங்குகிறது.",
+            offline_response_pmfby: "PM ஃபசல் பீமா யோஜனா (PMFBY) விவசாயிகளுக்கு குறைந்த பிரீமியத்தில் பயிர் இழப்புக்கு எதிராக காப்பீடு வழங்குகிறது.",
+            offline_response_kcc: "கிசான் கிரெடிட் கார்டு (KCC) மானிய வட்டி விகிதத்தில் விவசாயக் கடனை வழங்குகிறது.",
+            offline_response_loan: "கணக்கீடுகளுக்கு நிதிச் சேவைகள் பிரிவில் உள்ள கடன் மற்றும் வட்டி கால்குலேட்டரைப் பயன்படுத்தலாம்.",
+            offline_response_weather: "வானிலை முன்னறிவிப்பு பிரதான டாஷ்போர்டில் கிடைக்கிறது.",
+            offline_response_market: "சந்தை விலைகள் பிரிவில் பயிர் விலைகளை நீங்கள் சரிபார்த்து தேடலாம்."
+        }
+    };
+
+    // --- DATA ---
+    const appData = {
+        weatherForecast: [
+            {day: "Today", high: 32, low: 24, icon: "⛅"}, {day: "Mon", high: 33, low: 25, icon: "☀️"},
+            {day: "Tue", high: 34, low: 26, icon: "⛈️"}, {day: "Wed", high: 31, low: 24, icon: "☁️"},
+            {day: "Thu", high: 32, low: 25, icon: "🌦️"},
+        ],
+        cropPrices: [
+            {crop: "Paddy (Rice)", price: 2203, unit: "per quintal", change: "+1.2%"}, 
+            {crop: "Jute", price: 5050, unit: "per quintal", change: "-0.5%"},
+            {crop: "Potato", price: 1800, unit: "per quintal", change: "+2.8%"}, 
+            {crop: "Mustard", price: 5750, unit: "per quintal", change: "+0.9%"},
+            {crop: "Wheat", price: 2125, unit: "per quintal", change: "+0.7%"},
+            {crop: "Maize", price: 2050, unit: "per quintal", change: "-1.1%"},
+            {crop: "Soybean", price: 4500, unit: "per quintal", change: "+1.5%"},
+            {crop: "Cotton", price: 7200, unit: "per quintal", change: "+2.1%"},
+            {crop: "Sugarcane", price: 340, unit: "per quintal", change: "0.0%"},
+            {crop: "Tomato", price: 2500, unit: "per quintal", change: "-3.2%"},
+            {crop: "Onion", price: 2200, unit: "per quintal", change: "+4.5%"}
+        ],
+        diseases: [
+            { name: "Leaf Blight", severity: "High", color: "red", content: "Affects Rice & Wheat. Apply copper-based fungicide, improve drainage." },
+            { name: "Aphid Infestation", severity: "Medium", color: "yellow", content: "Affects Mustard & Vegetables. Use neem oil spray, introduce ladybugs." },
+            { name: "Root Rot", severity: "High", color: "red", content: "Affects various crops. Reduce watering, apply biological fungicide." },
+        ],
+        schemes: [
+            { name: "PM-KISAN", content: "Income support of ₹6000/year for small and marginal farmers." },
+            { name: "PM Fasal Bima Yojana (PMFBY)", content: "Insurance against crop loss with low premiums for farmers." },
+            { name: "Kisan Credit Card (KCC)", content: "Provides agricultural credit at subsidized interest rates." },
+        ]
+    };
+
+    // --- RENDER FUNCTIONS ---
+    function renderWeather() {
+        const container = document.getElementById('weatherForecast');
+        container.innerHTML = appData.weatherForecast.map(day => `
+            <div class="flex-1">
+                <p class="font-medium">${day.day}</p>
+                <p class="text-2xl my-1">${day.icon}</p>
+                <p>${day.high}°/${day.low}°</p>
+            </div>
+        `).join('');
+    }
+
+    function renderPrices(searchTerm = '') {
+        const container = document.getElementById('priceCards');
+        const filteredCrops = appData.cropPrices.filter(crop => 
+            crop.crop.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        if (filteredCrops.length === 0) {
+            container.innerHTML = `<p class="text-gray-500 col-span-2">No crops found matching your search.</p>`;
+            return;
+        }
+
+        container.innerHTML = filteredCrops.map(crop => `
+            <div class="bg-white p-4 rounded-lg border">
+                <p class="font-semibold">${crop.crop}</p>
+                <div class="flex justify-between items-baseline">
+                    <p class="text-2xl font-bold text-green-600">₹${crop.price}</p>
+                    <p class="text-sm ${crop.change.startsWith('+') ? 'text-green-500' : 'text-red-500'}">${crop.change}</p>
+                </div>
+                <p class="text-xs text-gray-500">${crop.unit}</p>
+            </div>
+        `).join('');
+    }
+
+    function renderDiseases() {
+        const container = document.getElementById('diseaseCards');
+        container.innerHTML = `<h2 class="text-xl font-semibold" data-lang-key="title_disease_db">Common Disease Database</h2>` + appData.diseases.map(d => `
+            <div class="bg-white p-4 rounded-lg border">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-semibold">${d.name}</h3>
+                    <span class="text-xs font-bold px-2 py-1 rounded-full bg-${d.color}-100 text-${d.color}-700">${d.severity}</span>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">${d.content}</p>
+            </div>
+        `).join('');
+    }
+    
+    function renderSchemes() {
+        const container = document.getElementById('schemeCards');
+        container.innerHTML = appData.schemes.map(s => `
+            <div class="bg-white p-4 rounded-lg border">
+                <h3 class="font-semibold text-blue-700">${s.name}</h3>
+                <p class="text-sm text-gray-600 mt-2">${s.content}</p>
+            </div>
+        `).join('');
+    }
+
+    function renderExamplePrompts(lang) {
+        const container = document.getElementById('example-prompts-container');
+        const langPrompts = translations[lang];
+        container.innerHTML = `
+            <button class="example-prompt bg-gray-100 text-sm text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition">${langPrompts.example_prompt1}</button>
+            <button class="example-prompt bg-gray-100 text-sm text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition">${langPrompts.example_prompt2}</button>
+            <button class="example-prompt bg-gray-100 text-sm text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition">${langPrompts.example_prompt3}</button>
+        `;
+        document.querySelectorAll('.example-prompt').forEach(button => {
+            button.addEventListener('click', () => {
+                const promptText = button.textContent;
+                addChatMessage(promptText, 'user');
+                generateAiResponse(promptText);
+            });
+        });
+    }
+
+    // --- LANGUAGE SWITCHER ---
+    const languageSelector = document.getElementById('languageSelector');
+    let currentLang = 'en';
+    const langMap = { en: 'en-US', hi: 'hi-IN', pa: 'pa-IN', ta: 'ta-IN' };
+
+    function updateLanguage(lang) {
+        currentLang = lang;
+        const langStrings = translations[lang];
+        document.querySelectorAll('[data-lang-key]').forEach(el => {
+            const key = el.getAttribute('data-lang-key');
+            if (langStrings[key]) {
+                if (key === 'reco_list') el.innerHTML = langStrings[key];
+                else el.textContent = langStrings[key];
+            }
+        });
+        document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-lang-key-placeholder');
+            if (langStrings[key]) el.placeholder = langStrings[key];
+        });
+        renderExamplePrompts(lang);
+    }
+    languageSelector.addEventListener('change', (e) => updateLanguage(e.target.value));
+
+    // --- CHART INITIALIZATION ---
+    let charts = {};
+    function initCharts() {
+        const priceCtx = document.getElementById('priceChart')?.getContext('2d');
+        if (priceCtx && !charts.price) {
+            charts.price = new Chart(priceCtx, { type: 'line', data: { labels: ['-30d', '-20d', '-10d', 'Today'], datasets: [ { label: 'Paddy', data: [2150, 2180, 2170, 2203], borderColor: '#22c55e', tension: 0.1 }, { label: 'Jute', data: [5100, 5080, 5000, 5050], borderColor: '#3b82f6', tension: 0.1 } ] }, options: { responsive: true, maintainAspectRatio: false } });
+        }
+    }
+
+    // --- NAVIGATION ---
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.content-section');
+    function showSection(sectionId) {
+        sections.forEach(s => s.classList.toggle('active', s.id === sectionId));
+        navButtons.forEach(b => b.classList.toggle('active', b.dataset.section === sectionId));
+        if (sectionId === 'market') initCharts();
+    }
+    navButtons.forEach(btn => btn.addEventListener('click', () => showSection(btn.dataset.section)));
+
+    // --- INTERACTIVITY & GEMINI FEATURES ---
+    let uploadedImageBase64 = null;
+    const uploadArea = document.getElementById('uploadArea');
+    const cropImageInput = document.getElementById('cropImageInput');
+    const uploadedImagePreview = document.getElementById('uploadedImagePreview');
+    const uploadIcon = document.getElementById('uploadIcon');
+    const diagnoseBtn = document.getElementById('diagnoseBtn');
+    const analysisResults = document.getElementById('analysisResults');
+    const diagnosisContent = document.getElementById('diagnosisContent');
+
+    uploadArea.addEventListener('click', () => cropImageInput.click());
+    cropImageInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                uploadedImageBase64 = event.target.result.split(',')[1];
+                uploadedImagePreview.src = event.target.result;
+                uploadedImagePreview.classList.remove('hidden');
+                uploadIcon.classList.add('hidden');
+                diagnoseBtn.classList.remove('hidden');
+                analysisResults.classList.add('hidden');
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
+    diagnoseBtn.addEventListener('click', async () => {
+        if (!uploadedImageBase64) return;
+        diagnosisContent.textContent = 'Diagnosing with AI...';
+        analysisResults.classList.remove('hidden');
+        
+        const prompt = "Identify the plant disease from this image and suggest a treatment plan for a small-scale farmer in India.";
+        const resultText = await callGeminiAPI(prompt, uploadedImageBase64);
+        diagnosisContent.textContent = resultText.replace(/\*/g, '');
+    });
+
+    document.getElementById('marketAnalysisBtn').addEventListener('click', async () => {
+        const marketResultDiv = document.getElementById('marketAnalysisResult');
+        marketResultDiv.textContent = 'Analyzing market data...';
+        marketResultDiv.classList.remove('hidden');
+        const prices = appData.cropPrices.map(p => `${p.crop}: ${p.price} INR ${p.unit}`).join(', ');
+        const prompt = `Based on these current market prices in West Bengal, India (${prices}), provide a brief market analysis and selling recommendation for a small farmer.`;
+        const resultText = await callGeminiAPI(prompt);
+        marketResultDiv.textContent = resultText.replace(/\*/g, '');
+    });
+    
+    document.getElementById('loanForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const area = parseFloat(document.getElementById('farmArea').value) || 0;
+        const income = parseFloat(document.getElementById('annualIncome').value) || 0;
+        if(area > 0 && income > 0) {
+            const amount = Math.round((area * 50000) + (income * 0.5));
+            document.getElementById('eligibleAmount').textContent = `₹${amount.toLocaleString()}`;
+            document.getElementById('loanResults').classList.remove('hidden');
+        }
+    });
+    
+    document.getElementById('schemeAdvisorBtn').addEventListener('click', async () => {
+        const advisorResultDiv = document.getElementById('schemeAdvisorResult');
+        advisorResultDiv.textContent = 'Generating personalized advice...';
+        advisorResultDiv.classList.remove('hidden');
+        const area = document.getElementById('farmArea').value;
+        const income = document.getElementById('annualIncome').value;
+        const prompt = `An Indian farmer has ${area} acres of land and an annual income of ${income} INR. Which government schemes (like PM-KISAN, PMFBY, KCC) would be most beneficial for them and why? Provide a brief, personalized recommendation.`;
+        const resultText = await callGeminiAPI(prompt);
+        advisorResultDiv.textContent = resultText.replace(/\*/g, '');
+    });
+
+    // --- Interest Calculator Logic ---
+    const interestCalcResults = document.getElementById('interestCalcResults');
+    document.getElementById('calculateTotalBtn').addEventListener('click', () => {
+        const P = parseFloat(document.getElementById('loanAmount').value);
+        const R = parseFloat(document.getElementById('interestRate').value);
+        const T = parseFloat(document.getElementById('loanTime').value);
+
+        if (P > 0 && R > 0 && T > 0) {
+            const interest = (P * R * T) / 100;
+            const totalAmount = P + interest;
+            interestCalcResults.innerHTML = `<p>Total Interest: <span class="font-bold">₹${interest.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span></p><p>Total Amount Payable: <span class="font-bold">₹${totalAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span></p>`;
+            interestCalcResults.classList.remove('hidden');
+        } else {
+            interestCalcResults.innerHTML = `<p class="text-red-600">Please enter valid Amount, Rate, and Time.</p>`;
+            interestCalcResults.classList.remove('hidden');
+        }
+    });
+
+    document.getElementById('calculateTenureBtn').addEventListener('click', () => {
+        const P = parseFloat(document.getElementById('loanAmount').value);
+        const R = parseFloat(document.getElementById('interestRate').value);
+        const E = parseFloat(document.getElementById('loanEmi').value);
+
+        if (P > 0 && R > 0 && E > 0) {
+            const r = (R / 100) / 12; // Monthly interest rate
+            if (P * r >= E) {
+                interestCalcResults.innerHTML = `<p class="text-red-600">EMI must be greater than monthly interest.</p>`;
+                interestCalcResults.classList.remove('hidden');
+                return;
+            }
+            const n = -Math.log(1 - (P * r) / E) / Math.log(1 + r);
+            const years = Math.floor(n / 12);
+            const months = Math.ceil(n % 12);
+            interestCalcResults.innerHTML = `<p>Time to repay loan: <span class="font-bold">${years} years and ${months} months</span></p>`;
+            interestCalcResults.classList.remove('hidden');
+        } else {
+            interestCalcResults.innerHTML = `<p class="text-red-600">Please enter valid Amount, Rate, and EMI.</p>`;
+            interestCalcResults.classList.remove('hidden');
+        }
+    });
+
+    // --- Crop Search Logic ---
+    const cropSearchInput = document.getElementById('cropSearchInput');
+    cropSearchInput.addEventListener('input', (e) => {
+        renderPrices(e.target.value);
+    });
+
+
+    // --- CHATBOT & VOICE ASSISTANT ---
+    const chatWindow = document.getElementById('chat-window');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        voiceBtn.addEventListener('click', () => {
+            if (recognition && recognition.isListening) {
+                recognition.stop();
+                return;
+            }
+            recognition.lang = langMap[currentLang];
+            recognition.start();
+        });
+
+        recognition.onstart = () => { voiceBtn.classList.add('listening', 'text-red-500'); recognition.isListening = true; };
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value = transcript;
+            const userMessage = chatInput.value.trim();
+            if (userMessage) { addChatMessage(userMessage, 'user'); chatInput.value = ''; generateAiResponse(userMessage); }
+        };
+        recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); };
+        recognition.onend = () => { voiceBtn.classList.remove('listening', 'text-red-500'); recognition.isListening = false; };
+    } else {
+        voiceBtn.style.display = 'none';
+    }
+
+    // --- Text-to-Speech ---
+    let currentUtterance = null; 
+
+    function loadVoices() {
+        availableVoices = speechSynthesis.getVoices();
+    }
+
+    function speakText(text, lang) {
+        if ('speechSynthesis' in window) {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+                if (currentUtterance && currentUtterance.text === text) {
+                    currentUtterance = null;
+                    return;
+                }
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = langMap[lang];
+            currentUtterance = utterance; 
+
+            utterance.onend = () => { currentUtterance = null; };
+            utterance.onerror = () => { currentUtterance = null; };
+            
+            let selectedVoice = availableVoices.find(voice => voice.lang === utterance.lang);
+            
+            if (!selectedVoice) {
+                 selectedVoice = availableVoices.find(voice => voice.lang.startsWith(lang));
+            }
+            if (!selectedVoice && lang === 'pa') {
+                 selectedVoice = availableVoices.find(voice => voice.lang.startsWith('hi'));
+            }
+            
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            } else {
+                console.warn(`No voice found for language: ${lang}. Using browser default.`);
+            }
+
+            speechSynthesis.speak(utterance);
+        }
+    }
+
+
+    chatWindow.addEventListener('click', (e) => {
+        const speakButton = e.target.closest('.speak-btn');
+        if (speakButton) {
+            const textToSpeak = speakButton.closest('.ai-bubble').querySelector('span').textContent;
+            speakText(textToSpeak, currentLang);
+        }
+    });
+    
+    chatForm.addEventListener('submit', e => { e.preventDefault(); const userMessage = chatInput.value.trim(); if (userMessage) { addChatMessage(userMessage, 'user'); chatInput.value = ''; generateAiResponse(userMessage); } });
+    
+    function addChatMessage(message, sender, isLoading = false) {
+        const bubble = document.createElement('div');
+        if (sender === 'user') {
+            bubble.className = 'chat-bubble user-bubble';
+            bubble.textContent = message;
+        } else {
+            bubble.className = 'chat-bubble ai-bubble';
+            const avatarSrc = "https://i.pinimg.com/736x/8e/15/8d/8e158d9a997a3ab9781f271317725969.jpg";
+            const fallbackSrc = "https://placehold.co/100x100/A7D3A9/4F46E5?text=🧑‍🌾";
+            if (isLoading) {
+                bubble.innerHTML = `<img src="${avatarSrc}" onerror="this.onerror=null;this.src='${fallbackSrc}';" alt="Farmer Avatar" class="ai-avatar"><div class="flex items-center space-x-2"><div class="w-2 h-2 bg-gray-500 rounded-full animate-pulse"></div><div class="w-2 h-2 bg-gray-500 rounded-full animate-pulse" style="animation-delay:0.2s"></div><div class="w-2 h-2 bg-gray-500 rounded-full animate-pulse" style="animation-delay:0.4s"></div></div>`;
+                bubble.id = 'loading-bubble';
+            } else {
+                bubble.innerHTML = `
+                    <img src="${avatarSrc}" onerror="this.onerror=null;this.src='${fallbackSrc}';" alt="Farmer Avatar" class="ai-avatar">
+                    <span>${message}</span>
+                    <div class="speak-container">
+                        <span class="speak-text" data-lang-key="speak_text_label">${translations[currentLang].speak_text_label}</span>
+                        <button class="speak-btn">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.293 7.293a1 1 0 011.414 1.414L13.414 10l2.293 2.293a1 1 0 01-1.414 1.414L12 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L10.586 10 8.293 7.707a1 1 0 011.414-1.414L12 8.586l2.293-2.293z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        chatWindow.appendChild(bubble);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+    
+    function getOfflineResponse(userMessage) {
+        const lowerCaseMessage = userMessage.toLowerCase();
+        const lang = currentLang;
+
+        if (lowerCaseMessage.includes('kisan') || lowerCaseMessage.includes('pm-kisan')) {
+            return translations[lang].offline_response_pmkisan;
+        }
+        if (lowerCaseMessage.includes('bima') || lowerCaseMessage.includes('pmfby')) {
+            return translations[lang].offline_response_pmfby;
+        }
+        if (lowerCaseMessage.includes('kcc') || lowerCaseMessage.includes('credit card')) {
+            return translations[lang].offline_response_kcc;
+        }
+        if (lowerCaseMessage.includes('loan') || lowerCaseMessage.includes('interest')) {
+            return translations[lang].offline_response_loan;
+        }
+        if (lowerCaseMessage.includes('weather') || lowerCaseMessage.includes('mausam')) {
+            return translations[lang].offline_response_weather;
+        }
+        if (lowerCaseMessage.includes('price') || lowerCaseMessage.includes('market') || lowerCaseMessage.includes('bazar')) {
+            return translations[lang].offline_response_market;
+        }
+
+        return translations[lang].offline_response_default;
+    }
+
+    async function generateAiResponse(userMessage) {
+        addChatMessage('', 'ai', true);
+        let aiText;
+
+        if (navigator.onLine) {
+            const langName = {en: "English", hi: "Hindi", pa: "Punjabi", ta: "Tamil"}[currentLang];
+            const prompt = `You are "AI Farmer Buddy", a friendly expert for Indian farmers. Answer the user's question. Respond ONLY in the ${langName} language. User's Question: "${userMessage}". Your Answer:`;
+            aiText = await callGeminiAPI(prompt);
+        } else {
+            aiText = getOfflineResponse(userMessage);
+            await new Promise(resolve => setTimeout(resolve, 500)); // Simulate thinking
+        }
+        
+        const cleanedAiText = aiText.replace(/\*/g, '');
+        document.getElementById('loading-bubble')?.remove();
+        addChatMessage(cleanedAiText, 'ai');
+    }
+
+    // --- GEMINI API CALL FUNCTION ---
+    async function callGeminiAPI(prompt, imageBase64 = null) {
+        // IMPORTANT: Replace with your own API key
+        const apiKey = "AIzaSyB_gq8nqqvKebyZEnqhvH--LVTQQ0ZfvE0"; 
+        
+        if (apiKey === "YOUR_API_KEY_HERE") {
+            return "Please replace 'YOUR_API_KEY_HERE' with your actual Google AI API key in the script section.";
+        }
+
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        
+        let parts = [{ text: prompt }];
+        if (imageBase64) {
+            parts.push({
+                inlineData: {
+                    mimeType: "image/jpeg",
+                    data: imageBase64
+                }
+            });
+        }
+
+        const payload = { contents: [{ role: "user", parts: parts }] };
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => null);
+                const errorMessage = errorBody?.error?.message || `HTTP Error: ${response.status} ${response.statusText}`;
+                throw new Error(errorMessage);
+            }
+
+            const result = await response.json();
+            
+            if (result.error) {
+                throw new Error(`Gemini API Error: ${result.error.message}`);
+            }
+
+            if (!result.candidates || result.candidates.length === 0) {
+                const finishReason = result.promptFeedback?.blockReason;
+                if (finishReason) {
+                    return `Sorry, my response was blocked for the following reason: ${finishReason}. Please try a different question.`;
+                }
+                return "Sorry, I couldn't get a valid response from the AI.";
+            }
+            
+            if (result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts[0].text) {
+                 return result.candidates[0].content.parts[0].text;
+            }
+
+            return "Sorry, I received an empty response from the AI.";
+
+        } catch (error) {
+            console.error("Error calling Gemini API:", error);
+            return `Sorry, there was an error connecting to the AI service. Details: ${error.message}`;
+        }
+    }
+
+    // --- Online/Offline Status ---
+    const onlineStatus = document.getElementById('online-status');
+    const onlineStatusText = document.getElementById('online-status-text');
+
+    function updateOnlineStatus() {
+        if (navigator.onLine) {
+            onlineStatus.style.backgroundColor = '#22c55e'; // green-500
+            onlineStatusText.textContent = translations[currentLang].online_status_text;
+        } else {
+            onlineStatus.style.backgroundColor = '#6b7280'; // gray-500
+            onlineStatusText.textContent = translations[currentLang].offline_status_text;
+        }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+
+    // --- INITIAL LOAD ---
+    renderWeather();
+    renderPrices();
+    renderDiseases();
+    renderSchemes();
+    initCharts();
+    updateLanguage('en');
+    updateOnlineStatus();
+    if ('speechSynthesis' in window) {
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+    }
+});
+</script>
+</body>
+</html>
