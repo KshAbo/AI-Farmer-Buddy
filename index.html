@@ -215,29 +215,17 @@
                     <div class="bg-white p-6 rounded-xl shadow-sm">
                         <h2 class="text-xl font-semibold mb-4" data-lang-key="title_weather">Weather Forecast</h2>
                         <div class="text-center mb-4">
-                            <p class="text-5xl font-bold">28°C</p>
-                            <p class="text-gray-500" data-lang-key="weather_location">Partly Cloudy in Kharagpur, WB</p>
+                        <p id="current-temp" class="text-5xl font-bold">--°C</p>
+                        <p id="weather-location" class="text-gray-500">Loading weather...</p>
                         </div>
                         <div id="weatherForecast" class="flex justify-between text-center text-sm"></div>
                     </div>
                     <!-- Alerts -->
+                   <!-- Modified Alerts HTML Block -->
                     <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h2 class="text-xl font-semibold mb-4" data-lang-key="title_alerts">Alerts <span class="text-sm bg-red-100 text-red-700 font-bold px-2 py-1 rounded-full">2</span></h2>
-                        <div class="space-y-3">
-                            <div class="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg">
-                                <span class="text-xl">🌧️</span>
-                                <div>
-                                    <p class="font-semibold" data-lang-key="alert1_title">Heavy Rain Expected</p>
-                                    <p class="text-sm text-gray-600" data-lang-key="alert1_desc">Thunderstorms forecasted for Day 3. Consider adjusting irrigation schedules.</p>
-                                </div>
-                            </div>
-                            <div class="flex items-start space-x-3 p-3 bg-red-50 rounded-lg">
-                                <span class="text-xl">🐛</span>
-                                <div>
-                                    <p class="font-semibold" data-lang-key="alert2_title">Pest Risk: Aphids</p>
-                                    <p class="text-sm text-gray-600" data-lang-key="alert2_desc">High risk of aphid infestation in mustard fields. Monitor crops closely.</p>
-                                </div>
-                            </div>
+                        <h2 class="text-xl font-semibold mb-4" data-lang-key="title_alerts">Alerts</h2>
+                        <div id="alerts-container" class="space-y-3">
+                            <p class="text-sm text-gray-500">Loading local alerts...</p>
                         </div>
                     </div>
                 </div>
@@ -277,7 +265,7 @@
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="space-y-4">
-                     <h2 class="text-xl font-semibold" data-lang-key="title_current_prices">Current Prices - Kharagpur Mandi</h2>
+                     <h2 class="text-xl font-semibold" data-lang-key="title_current_prices">Current Prices - Indian Market</h2>
                      <div id="priceCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
                      <button id="marketAnalysisBtn" class="w-full mt-4 py-2 px-4 rounded-md gemini-feature-btn font-semibold">✨ Get Market Analysis</button>
                 </div>
@@ -384,14 +372,14 @@ document.addEventListener('DOMContentLoaded', () => {
             nav_dashboard_mobile: "Dashboard", nav_crop_health_mobile: "Crop", nav_market_prices_mobile: "Market", nav_financial_services_mobile: "Finance",
             title_dashboard: "Farm Dashboard", title_ask_ai: "Ask AI Farmer Buddy", ai_greeting: "Namaste! I am AI Farmer Buddy. Ask me anything about crop choices, government schemes, or market prices.",
             placeholder_ask_question: "Type your question or use the mic...",
-            title_weather: "Weather Forecast", weather_location: "Partly Cloudy in Kharagpur, WB",
+            title_weather: "Weather Forecast",
             title_alerts: "Alerts", alert1_title: "Heavy Rain Expected", alert1_desc: "Thunderstorms forecasted for Day 3. Consider adjusting irrigation schedules.",
             alert2_title: "Pest Risk: Aphids", alert2_desc: "High risk of aphid infestation in mustard fields. Monitor crops closely.",
             title_crop_health: "Crop Health Monitor", title_crop_scanner: "AI Crop Scanner", scanner_prompt: "Click to upload or scan crop image",
             scanner_desc: "AI will analyze for diseases and deficiencies.", analysis_title: "AI Diagnosis Results",
             issue_title: "Detected Issue: Leaf Blight", issue_desc: "Brown spots and yellowing detected. High severity.",
             reco_title: "Recommendations", reco_list: `<li>Apply copper-based fungicide (Bordeaux mixture).</li><li>Improve field drainage immediately.</li><li>Remove and burn affected leaves.</li>`,
-            title_disease_db: "Common Disease Database", title_market: "Market Intelligence", title_current_prices: "Current Prices - Kharagpur Mandi",
+            title_disease_db: "Common Disease Database", title_market: "Market Intelligence", title_current_prices: "Current Prices - Indian Market",
             title_price_trends: "30-Day Price Trends", title_finance: "Financial Services", title_loan_calculator: "Loan Eligibility Calculator",
             label_farm_area: "Farm Area (in acres)", label_annual_income: "Annual Income (₹)", btn_calculate: "Calculate Eligibility",
             title_eligibility_results: "Eligibility Results", label_loan_amount: "Eligible Loan Amount:", title_gov_schemes: "Available Government Schemes",
@@ -421,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
             scanner_desc: "एआई बीमारियों और कमियों का विश्लेषण करेगा।", analysis_title: "एआई निदान परिणाम",
             issue_title: "पहचानी गई समस्या: पत्ती झुलसा", issue_desc: "भूरे धब्बे और पीलापन पाया गया। उच्च गंभीरता।",
             reco_title: "सिफारिशें", reco_list: `<li>कॉपर आधारित कवकनाशी (बोर्डो मिश्रण) लगाएं।</li><li>खेत की जल निकासी में तुरंत सुधार करें।</li><li>प्रभावित पत्तियों को हटाकर जला दें।</li>`,
-            title_disease_db: "सामान्य रोग डेटाबेस", title_market: "बाजार इंटेलिजेंस", title_current_prices: "वर्तमान मूल्य - खड़गपुर मंडी",
+            title_disease_db: "सामान्य रोग डेटाबेस", title_market: "बाजार इंटेलिजेंस", title_current_prices:  "वर्तमान मूल्य - भारतीय बाजार",
             title_price_trends: "30-दिन के मूल्य रुझान", title_finance: "वित्तीय सेवाएं", title_loan_calculator: "ऋण पात्रता कैलकुलेटर",
             label_farm_area: "खेत का क्षेत्रफल (एकड़ में)", label_annual_income: "वार्षिक आय (₹)", btn_calculate: "पात्रता की गणना करें",
             title_eligibility_results: "पात्रता परिणाम", label_loan_amount: "पात्र ऋण राशि:", title_gov_schemes: "उपलब्ध सरकारी योजनाएं",
@@ -451,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
             scanner_desc: "ਏਆਈ ਬਿਮਾਰੀਆਂ ਅਤੇ ਕਮੀਆਂ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰੇਗਾ।", analysis_title: "ਏਆਈ ਨਿਦਾਨ ਨਤੀਜੇ",
             issue_title: "ਪਛਾਣੀ ਗਈ ਸਮੱਸਿਆ: ਪੱਤਾ ਝੁਲਸ", issue_desc: "ਭੂਰੇ ਧੱਬੇ ਅਤੇ ਪੀਲਾਪਣ ਦੇਖਿਆ ਗਿਆ। ਉੱਚ ਗੰਭੀਰਤਾ।",
             reco_title: "ਸਿਫਾਰਸ਼ਾਂ", reco_list: `<li>ਤਾਂਬੇ-ਅਧਾਰਤ ਉੱਲੀਨਾਸ਼ਕ (ਬੋਰਡੋ ਮਿਸ਼ਰਣ) ਦੀ ਵਰਤੋਂ ਕਰੋ।</li><li>ਖੇਤ ਦੇ ਨਿਕਾਸ ਵਿੱਚ ਤੁਰੰਤ ਸੁਧਾਰ ਕਰੋ।</li><li>ਪ੍ਰਭਾਵਿਤ ਪੱਤਿਆਂ ਨੂੰ ਹਟਾ ਕੇ ਸਾੜ ਦਿਓ।</li>`,
-            title_disease_db: "ਆਮ ਬਿਮਾਰੀ ਡਾਟਾਬੇਸ", title_market: "ਮਾਰਕੀਟ ਇੰਟੈਲੀਜੈਂਸ", title_current_prices: "ਮੌਜੂਦਾ ਕੀਮਤਾਂ - ਖੜਗਪੁਰ ਮੰਡੀ",
+            title_disease_db: "ਆਮ ਬਿਮਾਰੀ ਡਾਟਾਬੇਸ", title_market: "ਮਾਰਕੀਟ ਇੰਟੈਲੀਜੈਂਸ", title_current_prices: "ਮੌਜੂਦਾ ਕੀਮਤਾਂ - ਭਾਰਤੀ ਬਾਜ਼ਾਰ",
             title_price_trends: "30-ਦਿਨ ਦੀਆਂ ਕੀਮਤਾਂ ਦੇ ਰੁਝਾਨ", title_finance: "ਵਿੱਤੀ ਸੇਵਾਵਾਂ", title_loan_calculator: "ਲੋਨ ਯੋਗਤਾ ਕੈਲਕੁਲੇਟਰ",
             label_farm_area: "ਖੇਤ ਦਾ ਖੇਤਰਫਲ (ਏਕੜ ਵਿੱਚ)", label_annual_income: "ਸਾਲਾਨਾ ਆਮਦਨ (₹)", btn_calculate: "ਯੋਗਤਾ ਦੀ ਗਣਨਾ ਕਰੋ",
             title_eligibility_results: "ਯੋਗਤਾ ਦੇ ਨਤੀਜੇ", label_loan_amount: "ਯੋਗ ਲੋਨ ਦੀ ਰਕਮ:", title_gov_schemes: "ਉਪਲਬਧ ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ",
@@ -481,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
             scanner_desc: "AI நோய்கள் மற்றும் குறைபாடுகளை பகுப்பாய்வு செய்யும்.", analysis_title: "AI கண்டறிதல் முடிவுகள்",
             issue_title: "கண்டறியப்பட்ட சிக்கல்: இலை கருகல்", issue_desc: "பழுப்பு புள்ளிகள் மற்றும் மஞ்சள் நிறம் கண்டறியப்பட்டது. அதிக தீவிரம்.",
             reco_title: "பரிந்துரைகள்", reco_list: `<li>தாமிரம் சார்ந்த பூஞ்சைக் கொல்லியை (போர்டோ கலவை) பயன்படுத்தவும்.</li><li>வயல் வடிகால் வசதியை உடனடியாக மேம்படுத்தவும்.</li><li>பாதிக்கப்பட்ட இலைகளை அகற்றி எரிக்கவும்.</li>`,
-            title_disease_db: "பொதுவான நோய் தரவுத்தளம்", title_market: "சந்தை நுண்ணறிவு", title_current_prices: "தற்போதைய விலைகள் - கரக்பூர் மண்டி",
+            title_disease_db: "பொதுவான நோய் தரவுத்தளம்", title_market: "சந்தை நுண்ணறிவு", title_current_prices: "தற்போதைய விலைகள் - இந்திய சந்தை",
             title_price_trends: "30-நாள் விலை போக்குகள்", title_finance: "நிதி சேவைகள்", title_loan_calculator: "கடன் தகுதி கால்குலேटर",
             label_farm_area: "பண்ணை பகுதி (ஏக்கரில்)", label_annual_income: "ஆண்டு வருமானம் (₹)", btn_calculate: "தகுதியைக் கணக்கிடுங்கள்",
             title_eligibility_results: "தகுதி முடிவுகள்", label_loan_amount: "தகுதியான கடன் தொகை:", title_gov_schemes: "கிடைக்கும் அரசாங்க திட்டங்கள்",
@@ -690,10 +678,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const marketResultDiv = document.getElementById('marketAnalysisResult');
         marketResultDiv.textContent = 'Analyzing market data...';
         marketResultDiv.classList.remove('hidden');
-        const prices = appData.cropPrices.map(p => `${p.crop}: ${p.price} INR ${p.unit}`).join(', ');
-        const prompt = `Based on these current market prices in West Bengal, India (${prices}), provide a brief market analysis and selling recommendation for a small farmer.`;
-        const resultText = await callGeminiAPI(prompt);
-        marketResultDiv.textContent = resultText.replace(/\*/g, '');
+        const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+         const prices = appData.cropPrices.map(p => `${p.crop}: ${p.price} INR ${p.unit}`).join(', ');
+         const prompt = `Based on these current average prices across the Indian market (${prices}), provide a brief market analysis and selling recommendation for a small farmer.`;
+         const resultText = await callGeminiAPI(prompt);
+         marketResultDiv.textContent = resultText.replace(/\*/g, '');
     });
     
     document.getElementById('loanForm').addEventListener('submit', (e) => {
@@ -933,10 +922,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // IMPORTANT: Replace with your own API key
         const apiKey = "AIzaSyB_gq8nqqvKebyZEnqhvH--LVTQQ0ZfvE0"; 
         
-        if (apiKey === "YOUR_API_KEY_HERE") {
-            return "Please replace 'YOUR_API_KEY_HERE' with your actual Google AI API key in the script section.";
-        }
-
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
         
         let parts = [{ text: prompt }];
@@ -989,6 +974,86 @@ document.addEventListener('DOMContentLoaded', () => {
             return `Sorry, there was an error connecting to the AI service. Details: ${error.message}`;
         }
     }
+    async function getWeatherData() {
+    // 1. Get your OpenWeatherMap API Key and replace the placeholder below
+    const weatherApiKey = "3208d37a8e6994e116c8ff286d129120";
+
+    // 2. Get User's Location
+    if (!navigator.geolocation) {
+        document.getElementById('weather-location').textContent = "Geolocation is not supported by your browser.";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        // 3. Fetch Weather Data from API
+        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${weatherApiKey}&units=metric`;
+        
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Weather data not found.');
+            
+            const data = await response.json();
+
+            // 4. Update the HTML with live data
+            const temp = Math.round(data.main.temp);
+            const location = `${data.name}, ${data.sys.country}`;
+            const description = data.weather[0].description;
+
+            document.getElementById('current-temp').textContent = `${temp}°C`;
+            document.getElementById('weather-location').textContent = `${description.charAt(0).toUpperCase() + description.slice(1)} in ${location}`;
+            generateRealTimeAlerts(location);
+        } catch (error) {
+            console.error("Error fetching weather:", error);
+            document.getElementById('weather-location').textContent = "Could not fetch weather data.";
+        }
+    }, () => {
+        document.getElementById('weather-location').textContent = "Unable to retrieve your location.";
+    });
+}
+
+async function generateRealTimeAlerts(location) {
+    const alertsContainer = document.getElementById('alerts-container');
+    const lang = currentLang; // Get the currently selected language
+    
+    // Create a prompt for the AI
+    const prompt = `Acting as an agricultural expert for ${location}, generate two brief, actionable alerts for local farmers. Focus on potential risks like pests, weather events (heatwaves, heavy rain), or common crop diseases for this specific area. Format the response as a simple JSON array of two objects, each with a "title", "description", and "emoji" key. Respond ONLY in the language code: ${lang}.`;
+
+    // Call the AI
+    const aiResponse = await callGeminiAPI(prompt);
+
+   // This is the new, corrected code
+try {
+    // Clean the AI response to find the JSON part
+    const jsonStringMatch = aiResponse.match(/\[.*\]/s);
+    if (!jsonStringMatch) {
+        throw new Error("No valid JSON array found in the AI response.");
+    }
+    const jsonString = jsonStringMatch[0];
+    const alerts = JSON.parse(jsonString);
+
+    // Clear the loading message and build the new alerts
+    alertsContainer.innerHTML = '';
+    alerts.forEach(alert => {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg';
+        alertDiv.innerHTML = `
+            <span class="text-xl">${alert.emoji}</span>
+            <div>
+                <p class="font-semibold">${alert.title}</p>
+                <p class="text-sm text-gray-600">${alert.description}</p>
+            </div>
+        `;
+        alertsContainer.appendChild(alertDiv);
+    });
+} catch (error) {
+    console.error("Error parsing AI alerts:", error, "Raw response:", aiResponse);
+    alertsContainer.innerHTML = `<p class="text-sm text-red-500">Could not load real-time alerts.</p>`;
+}
+}
+    
 
     // --- Online/Offline Status ---
     const onlineStatus = document.getElementById('online-status');
@@ -1009,7 +1074,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- INITIAL LOAD ---
-    renderWeather();
+    getWeatherData();
     renderPrices();
     renderDiseases();
     renderSchemes();
